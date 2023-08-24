@@ -1,3 +1,5 @@
+import { UserButton } from "@clerk/nextjs";
+
 export default function DashboardLayout({
   children,
 }: {
@@ -9,7 +11,11 @@ export default function DashboardLayout({
         Mood
       </aside>
       <div className='ml-[200px]'>
-        <header className='h-[60px] border-b border-black/10'>Hello</header>
+        <header className='h-[60px] border-b border-black/10'>
+          <div className='h-full w-full px-6 flex items-center justify-end'>
+            <UserButton />
+          </div>
+        </header>
         <div>{children}</div>
       </div>
     </div>
