@@ -3,6 +3,7 @@
 import { Analysis } from "@/types";
 import { updateEntry } from "@/utils/api";
 import { useState } from "react";
+// @ts-ignore
 import { useAutosave } from "react-autosave";
 
 export default function Editor({
