@@ -1,5 +1,5 @@
 import { qa } from "@/utils/ai";
-import { getUserByClerkId } from "@/utils/auth";
+import { getUserByClerkId, keyfetch } from "@/utils/auth";
 import { prisma } from "@/utils/db";
 import { NextResponse } from "next/server";
 
@@ -17,7 +17,8 @@ export async function POST(req: Request) {
       createdAt: true,
     },
   });
-
+  const key = await keyfetch();
+  process.env.OPENAI_API_KEY = key;
   const answer = await qa(question, entires);
 
   return NextResponse.json({ data: answer });

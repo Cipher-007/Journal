@@ -1,5 +1,5 @@
 import { analyze } from "@/utils/ai";
-import { getUserByClerkId } from "@/utils/auth";
+import { getUserByClerkId, keyfetch } from "@/utils/auth";
 import { prisma } from "@/utils/db";
 import { NextResponse } from "next/server";
 
@@ -20,7 +20,8 @@ export async function PATCH(
       content: content,
     },
   });
-
+  const key = await keyfetch();
+  process.env.OPENAI_API_KEY = key;
   const analysis = await analyze(updatedEntry.content);
   let updatedAnalysis;
   if (analysis) {
