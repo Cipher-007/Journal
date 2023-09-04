@@ -1,9 +1,6 @@
-import { decrypt } from "@/utils/aes";
-import { prisma } from "@/utils/db";
-import { UserButton, currentUser } from "@clerk/nextjs";
+import { UserButton } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 const links = [
   { href: "/", label: "Home" },
@@ -11,33 +8,11 @@ const links = [
   { href: "/history", label: "History" },
 ];
 
-async function keyfetch() {
-  const user = await currentUser();
-
-  const openAIKey = await prisma.user.findUnique({
-    where: {
-      clerkId: user?.id as string,
-    },
-    select: {
-      openAI: true,
-    },
-  });
-
-  return openAIKey?.openAI;
-}
-
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const key = await keyfetch();
-  if (key) {
-    process.env.OPENAI_API_KEY = decrypt(key);
-  } else {
-    redirect("/new-user");
-  }
-
   return (
     <div className='h-screen w-screen relative'>
       <aside className='absolute top-0 left-0 h-full border-r border-black/10 w-[200px]'>
