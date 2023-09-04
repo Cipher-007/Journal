@@ -17,7 +17,7 @@ export default async function DashboardLayout({
     <div className='h-screen w-screen relative'>
       <aside className='absolute top-0 left-0 h-full border-r border-black/10 w-[200px]'>
         <div>
-          <Image src='/logo.png' width={80} height={80} alt='Logo' />
+          <Image src='/logo.svg' width={60} height={60} alt='Logo' />
         </div>
         <ul>
           {links.map((link) => (
