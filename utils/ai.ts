@@ -1,12 +1,12 @@
-import { PromptTemplate } from "langchain/prompts";
+import { loadQARefineChain } from "langchain/chains";
+import { Document } from "langchain/document";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { OpenAI } from "langchain/llms/openai";
 import { StructuredOutputParser } from "langchain/output_parsers";
-
-import z from "zod";
-import { Document } from "langchain/document";
-import { loadQARefineChain } from "langchain/chains";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { PromptTemplate } from "langchain/prompts";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { z } from "zod";
+import { keyfetch } from "./auth";
 
 const parser = StructuredOutputParser.fromZodSchema(
   z.object({
@@ -51,8 +51,13 @@ async function getPrompt(content: string) {
 }
 
 export async function analyze(content: string) {
+  const API_KEY = await keyfetch();
   const input = await getPrompt(content);
-  const model = new OpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" });
+  const model = new OpenAI({
+    temperature: 0,
+    modelName: "gpt-3.5-turbo",
+    openAIApiKey: API_KEY,
+  });
   const result = await model.call(input);
 
   try {
@@ -72,8 +77,12 @@ export async function qa(
       metadata: { id: entry.id, createdAt: entry.createdAt },
     });
   });
-
-  const model = new OpenAI({ temperature: 0, modelName: "gpt-3.5-turbo" });
+  const API_KEY = await keyfetch();
+  const model = new OpenAI({
+    temperature: 0,
+    modelName: "gpt-3.5-turbo",
+    openAIApiKey: API_KEY,
+  });
 
   const chain = loadQARefineChain(model);
 
