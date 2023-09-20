@@ -1,5 +1,5 @@
 import { analyze } from "@/utils/ai";
-import { getUserByClerkId, keyfetch } from "@/utils/auth";
+import { getUserByClerkId } from "@/utils/auth";
 import { prisma } from "@/utils/db";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
@@ -13,8 +13,6 @@ export async function POST(req: Request) {
       content: data.content,
     },
   });
-  const key = await keyfetch();
-  process.env.OPENAI_API_KEY = key;
   const analysis = await analyze(entry.content);
 
   if (analysis) {
