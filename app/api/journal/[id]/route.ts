@@ -7,41 +7,37 @@ export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const { content } = await req.json();
-  const user = await getUserByClerkId();
-  const updatedEntry = await prisma.journalEntry.update({
-    where: {
-      userId_id: {
-        userId: user.id,
-        id: params.id,
-      },
-    },
-    data: {
-      content: content,
-    },
-  });
-  const analysis = await analyze(updatedEntry.content);
-  let updatedAnalysis;
+  const { content }: { content: string } = await req.json();
+
+  const { id } = await getUserByClerkId();
+
+  const analysis = await analyze(content);
+
   if (analysis) {
-    updatedAnalysis = await prisma.analysis.upsert({
+    const updatedEntry = await prisma.journalEntry.update({
       where: {
-        entryId: updatedEntry.id,
+        userId_id: {
+          userId: id,
+          id: params.id,
+        },
       },
-      create: {
-        userId: user.id,
-        entryId: updatedEntry.id,
-        color: analysis.color,
-        mood: analysis.mood,
-        negative: analysis.negative,
-        subject: analysis.subject,
-        summary: analysis.summary,
-        sentimentScore: analysis.sentimentScore,
+      data: {
+        content: content,
+        analysis: {
+          update: {
+            ...analysis,
+          },
+        },
       },
-      update: analysis,
+      include: {
+        analysis: true,
+      },
+    });
+
+    return NextResponse.json({
+      data: { ...updatedEntry },
     });
   }
 
-  return NextResponse.json({
-    data: { ...updatedEntry, analysis: updatedAnalysis },
-  });
+  return NextResponse.json({ error: "Updating entry failed" }, { status: 500 });
 }
