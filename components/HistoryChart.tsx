@@ -1,6 +1,6 @@
 "use client";
 
-import { Analysis } from "@/types";
+import type { Analysis } from "@prisma/client";
 import {
   Line,
   LineChart,
@@ -8,6 +8,7 @@ import {
   Tooltip,
   TooltipProps,
   XAxis,
+  YAxis,
 } from "recharts";
 import {
   ValueType,
@@ -21,34 +22,33 @@ function CustomTooltip({
 }: TooltipProps<ValueType, NameType>) {
   let analysis;
   if (active) {
-    const dateLabel = new Date(label).toLocaleString("en-us", {
-      weekday: "long",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-    });
     if (payload) {
       analysis = payload[0].payload;
     }
     return (
-      <div className='p-8 custom-tooltip bg-white/5 shadow-md border border-black/10 rounded-lg backdrop-blur-md relative'>
+      <div className='p-8 bg-slate-300/75 shadow-md border border-black/10 rounded-lg backdrop-blur-md relative'>
         <div
           className='absolute left-2 top-2 w-2 h-2 rounded-full'
           style={{ background: analysis.color }}
         ></div>
-        <p className='label text-sm text-black/30'>{dateLabel}</p>
+        <p className='label text-sm text-black/30'>{label}</p>
         <p className='intro text-xl uppercase'>{analysis.mood}</p>
       </div>
     );
   }
 }
 
-export default function HistoryChart({ data }: { data: Analysis[] }) {
+export default function HistoryChart({ data }: { data: Partial<Analysis>[] }) {
+  const d = data.map((d) => ({
+    ...d,
+    createdAt: new Date(d.createdAt!).toLocaleDateString("en-us", {
+      month: "short",
+      day: "numeric",
+    }),
+  }));
   return (
-    <ResponsiveContainer width={"100%"} height={"100%"}>
-      <LineChart width={300} height={100} data={data}>
+    <ResponsiveContainer width={"100%"} height={"88%"}>
+      <LineChart width={300} height={100} data={d}>
         <Line
           dataKey='sentimentScore'
           type='monotone'
@@ -57,6 +57,7 @@ export default function HistoryChart({ data }: { data: Analysis[] }) {
           activeDot={{ r: 8 }}
         />
         <XAxis dataKey='createdAt' />
+        <YAxis dataKey='sentimentScore' />
         <Tooltip content={CustomTooltip} />
       </LineChart>
     </ResponsiveContainer>
