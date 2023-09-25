@@ -2,7 +2,9 @@
 
 import { askQuestion } from "@/utils/api";
 import { useState } from "react";
-import { set } from "zod";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { SendHorizontal } from "lucide-react";
 
 export default function Question() {
   const [value, setValue] = useState("");
@@ -23,23 +25,19 @@ export default function Question() {
 
   return (
     <>
-      <form onSubmit={submitHandler}>
-        <input
+      <form onSubmit={submitHandler} className='gap-5 flex'>
+        <Input
           type='text'
           disabled={loading}
           placeholder='Ask a question'
           onChange={changeHandler}
-          className='border border-black/20 px-4 py-2 text-lg rounded-lg'
+          className='rounded-3xl border-2 w-full'
         />
-        <button
-          type='submit'
-          disabled={loading}
-          className='bg-blue-400 px-4 py-2 rounded-lg text-lg'
-        >
-          Ask
-        </button>
+        <Button type='submit' disabled={loading} className=''>
+          <SendHorizontal className='w-5 h-5' />
+        </Button>
       </form>
-      {loading && <div>Loading...</div>}
+      {loading ? <div>Loading...</div> : null}
       {response && <div>{response}</div>}
     </>
   );
