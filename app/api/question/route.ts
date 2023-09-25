@@ -19,5 +19,9 @@ export async function POST(req: Request) {
   });
   const answer = await qa(question, entires);
 
-  return NextResponse.json({ data: answer });
+  if (answer) {
+    return NextResponse.json({ data: answer });
+  }
+
+  return NextResponse.json({ error: "No answer found" }, { status: 500 });
 }
