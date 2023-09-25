@@ -29,7 +29,7 @@ export default async function EntryPage({
   const entry = await getEntry(params.id);
   if (entry !== null) {
     return (
-      <div className='h-full w-full'>
+      <div className='h-[90%] w-full'>
         <Editor
           entry={{
             id: entry.id,
