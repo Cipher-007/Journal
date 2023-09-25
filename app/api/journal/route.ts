@@ -1,35 +1,33 @@
-import { analyze } from "@/utils/ai";
 import { getUserByClerkId } from "@/utils/auth";
 import { prisma } from "@/utils/db";
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
+const defaultAnalysis = {
+  color: "#00ff00",
+  summary: "Productive and enjoyable day with friends and family.",
+  subject: "My Day",
+  mood: "happy",
+  negative: false,
+  sentimentScore: 8.5,
+} as const;
+
 export async function POST(req: Request) {
-  const data = await req.json();
-  const user = await getUserByClerkId();
+  const { content }: { content: string } = await req.json();
+  const { id } = await getUserByClerkId();
   const entry = await prisma.journalEntry.create({
     data: {
-      userId: user.id,
-      content: data.content,
+      userId: id,
+      content: content,
+      analysis: {
+        create: {
+          ...defaultAnalysis,
+          userId: id,
+        },
+      },
     },
   });
-  const analysis = await analyze(entry.content);
-
-  if (analysis) {
-    await prisma.analysis.create({
-      data: {
-        userId: user.id,
-        entryId: entry.id,
-        color: analysis.color,
-        mood: analysis.mood,
-        negative: analysis.negative,
-        subject: analysis.subject,
-        summary: analysis.summary,
-        sentimentScore: analysis.sentimentScore,
-      },
-    });
-  }
 
   revalidatePath("/journal");
-  return NextResponse.json({ data: entry });
+  return NextResponse.json(entry);
 }
