@@ -19,7 +19,9 @@ const parser = StructuredOutputParser.fromZodSchema(
       .describe(
         "is the journal entry negative? (i.e. does it contain negative emotions?)"
       ),
-    summary: z.string().describe("quick summary of the entire journal entry."),
+    summary: z
+      .string()
+      .describe("quick summary of the entire journal entry in 10 word."),
     color: z
       .string()
       .describe(
@@ -71,13 +73,13 @@ export async function qa(
   question: string,
   entires: { id: string; content: string; createdAt: Date }[]
 ) {
+  const API_KEY = await keyfetch();
   const docs = entires.map((entry) => {
     return new Document({
       pageContent: entry.content,
       metadata: { id: entry.id, createdAt: entry.createdAt },
     });
   });
-  const API_KEY = await keyfetch();
   const model = new OpenAI({
     temperature: 0,
     modelName: "gpt-3.5-turbo",
@@ -86,7 +88,7 @@ export async function qa(
 
   const chain = loadQARefineChain(model);
 
-  const embeddings = new OpenAIEmbeddings();
+  const embeddings = new OpenAIEmbeddings({ openAIApiKey: API_KEY });
 
   const store = await MemoryVectorStore.fromDocuments(docs, embeddings);
 
