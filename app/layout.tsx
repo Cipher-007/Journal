@@ -1,10 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import logo from "../public/logo.ico";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Diary Insights",
@@ -22,7 +18,7 @@ export default function RootLayout({
         <head>
           <link rel='icon' href='/logo.svg' sizes='any' />
         </head>
-        <body className={inter.className}>{children}</body>
+        <body>{children}</body>
       </html>
     </ClerkProvider>
   );
