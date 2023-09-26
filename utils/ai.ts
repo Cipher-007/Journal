@@ -1,4 +1,5 @@
-import { loadQARefineChain } from "langchain/chains";
+import { JournalEntryWithAnalysis } from "@/types";
+import { loadQAStuffChain } from "langchain/chains";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { OpenAI } from "langchain/llms/openai";
@@ -71,22 +72,26 @@ export async function analyze(content: string) {
 
 export async function qa(
   question: string,
-  entires: { id: string; content: string; createdAt: Date }[]
+  entires: JournalEntryWithAnalysis[]
 ) {
   const API_KEY = await keyfetch();
   const docs = entires.map((entry) => {
     return new Document({
       pageContent: entry.content,
-      metadata: { id: entry.id, createdAt: entry.createdAt },
+      metadata: {
+        createdAt: new Date(entry.createdAt!).toDateString(),
+        ...entry.analysis,
+      },
     });
   });
+
   const model = new OpenAI({
     temperature: 0,
     modelName: "gpt-3.5-turbo",
     openAIApiKey: API_KEY,
   });
 
-  const chain = loadQARefineChain(model);
+  const chain = loadQAStuffChain(model);
 
   const embeddings = new OpenAIEmbeddings({ openAIApiKey: API_KEY });
 
@@ -94,10 +99,14 @@ export async function qa(
 
   const relevantDocs = await store.similaritySearch(question);
 
-  const res = await chain.call({
-    input_documents: relevantDocs,
-    question,
-  });
-
-  return res.output_text;
+  try {
+    const res = await chain.call({
+      input_documents: relevantDocs,
+      question,
+      timeout: 25000,
+    });
+    return res.text;
+  } catch (error) {
+    return String(error);
+  }
 }
