@@ -1,4 +1,4 @@
-import { Analysis } from "@prisma/client";
+import { EntryCardProps } from "@/types";
 import {
   Card,
   CardContent,
@@ -6,12 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-
-type EntryCardProps = {
-  id: string;
-  createdAt: Date;
-  analysis: Partial<Analysis> | null;
-};
 
 export default function EntryCard({ entry }: { entry: EntryCardProps }) {
   const date = new Date(entry.createdAt).toDateString();
