@@ -1,12 +1,5 @@
-import type { Analysis, JournalEntry } from "@prisma/client";
-
-type JournalEntryWithAnalysis = {
-  id: string;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-  analysis: Partial<Analysis>;
-};
+import { JournalEntryWithAnalysis } from "@/types";
+import type { JournalEntry } from "@prisma/client";
 
 function createURL(path: string) {
   return window.location.origin + path;
@@ -45,11 +38,15 @@ export async function updateEntry(id: string, content: string) {
   }
 }
 
-export async function askQuestion(question: string) {
+export async function askQuestion(
+  question: string,
+  entires: JournalEntryWithAnalysis[]
+) {
   const res = await fetch(createURL("/api/question"), {
     method: "POST",
     body: JSON.stringify({
       question,
+      entires,
     }),
   });
 
