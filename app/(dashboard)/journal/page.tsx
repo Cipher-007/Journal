@@ -13,6 +13,7 @@ async function getEntries() {
     select: {
       id: true,
       createdAt: true,
+      content: true,
       analysis: {
         select: {
           summary: true,
@@ -90,7 +91,7 @@ export default async function JournalPage() {
         </div>
       </main>
       <div className='right-12 absolute bottom-8'>
-        <ChatBubble />
+        <ChatBubble entries={entries} />
       </div>
     </div>
   );
