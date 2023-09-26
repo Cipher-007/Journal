@@ -14,12 +14,7 @@ import {
   CardTitle,
 } from "./ui/card";
 import { Input } from "./ui/input";
-
-type ChatProps = {
-  id: string;
-  user: string;
-  ai: string;
-}[];
+import { ChatProps, JournalEntryWithAnalysis } from "@/types";
 
 function Chat({ chat }: { chat: ChatProps }) {
   return (
@@ -46,7 +41,11 @@ function Chat({ chat }: { chat: ChatProps }) {
   );
 }
 
-export default function ChatBubble() {
+export default function ChatBubble({
+  entries,
+}: {
+  entries: JournalEntryWithAnalysis[];
+}) {
   const [showChat, setShowChat] = useState(false);
   const [chat, setChat] = useState<ChatProps>([]);
   const [loading, setLoading] = useState(false);
@@ -59,7 +58,7 @@ export default function ChatBubble() {
     const id = nanoid();
     setLoading(true);
     setChat((prevState) => [...prevState, { id: id, user: question, ai: "" }]);
-    const answer = await askQuestion(question);
+    const answer = await askQuestion(question, entries);
     setChat((prevState) =>
       prevState.map((item) => (item.id === id ? { ...item, ai: answer } : item))
     );
