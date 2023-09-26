@@ -7,7 +7,6 @@ import { StructuredOutputParser } from "langchain/output_parsers";
 import { PromptTemplate } from "langchain/prompts";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { z } from "zod";
-import { keyfetch } from "./auth";
 
 const parser = StructuredOutputParser.fromZodSchema(
   z.object({
@@ -54,12 +53,10 @@ async function getPrompt(content: string) {
 }
 
 export async function analyze(content: string) {
-  const API_KEY = await keyfetch();
   const input = await getPrompt(content);
   const model = new OpenAI({
     temperature: 0,
     modelName: "gpt-3.5-turbo",
-    openAIApiKey: API_KEY,
   });
   const result = await model.call(input);
 
@@ -74,7 +71,6 @@ export async function qa(
   question: string,
   entires: JournalEntryWithAnalysis[]
 ) {
-  const API_KEY = await keyfetch();
   const docs = entires.map((entry) => {
     return new Document({
       pageContent: entry.content,
@@ -88,12 +84,11 @@ export async function qa(
   const model = new OpenAI({
     temperature: 0,
     modelName: "gpt-3.5-turbo",
-    openAIApiKey: API_KEY,
   });
 
   const chain = loadQAStuffChain(model);
 
-  const embeddings = new OpenAIEmbeddings({ openAIApiKey: API_KEY });
+  const embeddings = new OpenAIEmbeddings();
 
   const store = await MemoryVectorStore.fromDocuments(docs, embeddings);
 
