@@ -21,7 +21,7 @@ export default function Editor({
     console.log(value);
     const { updatedEntry, error } = await updateEntry(entry.id, value);
     if (updatedEntry) {
-      setAnalysis(updatedEntry.analysis);
+      setAnalysis(updatedEntry.analysis!);
     }
 
     if (error) {
