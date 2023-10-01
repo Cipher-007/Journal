@@ -2,30 +2,48 @@ import { encrypt } from "@/utils/aes";
 import { prisma } from "@/utils/db";
 import { currentUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
+import { z } from "zod";
+
+const schema = z.object({
+  apiKey: z.string().length(51),
+});
 
 async function matcher(id: string) {
-  const match = await prisma.user.findUnique({
+  const userInDB = await prisma.user.findUnique({
     where: {
-      clerkId: id as string,
+      clerkId: id,
     },
   });
-  return match ? true : false;
+
+  if (userInDB && userInDB.openAI && userInDB.clerkId === id) {
+    return true;
+  }
+  return false;
 }
 
 async function apiKeySubmit(formData: FormData) {
   "use server";
-  const apiKey = formData.get("apiKey") as string;
-  if (apiKey) {
-    const encrypted = encrypt(apiKey);
+
+  const parsed = schema.parse({
+    apiKey: formData.get("apiKey"),
+  });
+
+  if (parsed.apiKey) {
+    const encrypted = encrypt(parsed.apiKey);
 
     await createNewUser(encrypted);
+
     return encrypted;
   }
 }
 
 async function createNewUser(encrypted: string) {
   const user = await currentUser();
-  const match = await matcher(user?.id as string);
+
+  if (!user) {
+    throw new Error("No user");
+  }
+  const match = await matcher(user.id);
 
   if (!match) {
     await prisma.user.create({
@@ -41,7 +59,13 @@ async function createNewUser(encrypted: string) {
 
 export default async function Newuser() {
   const user = await currentUser();
-  const match = await matcher(user?.id as string);
+
+  if (!user) {
+    throw new Error("No user");
+  }
+
+  const match = await matcher(user.id);
+
   if (match) {
     redirect("/journal");
   }
@@ -57,7 +81,7 @@ export default async function Newuser() {
         <input
           type='text'
           name='apiKey'
-          className='flex h-10 w-full rounded-md border border-black/20 border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+          className='flex h-10 w-full rounded-md border border-black/20 bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
         />
         <button
           type='submit'

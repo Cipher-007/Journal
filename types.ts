@@ -1,13 +1,21 @@
-export type Analysis = {
+import type { Analysis } from "@prisma/client";
+
+export type EntryCardProps = {
   id: string;
   createdAt: Date;
-  updatedAt: Date;
-  entryId: string;
-  userId: string;
-  mood: string;
-  summary: string;
-  color: string;
-  negative: boolean;
-  subject: string;
-  sentimentScore: number;
+  analysis: Partial<Analysis> | null;
+};
+
+export type ChatProps = {
+  id: string;
+  user: string;
+  ai: string;
+}[];
+
+export type JournalEntryWithAnalysis = {
+  id: string;
+  content: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  analysis: Partial<Analysis> | null;
 };

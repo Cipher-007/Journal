@@ -1,8 +1,9 @@
+import ChatBubble from "@/components/ChatBubble";
 import EntryCard from "@/components/EntryCard";
-import NewEntryCard from "@/components/NewEntryCard";
-import Question from "@/components/Question";
+import NewEntry from "@/components/NewEntry";
 import { getUserByClerkId } from "@/utils/auth";
 import { prisma } from "@/utils/db";
+import clsx from "clsx";
 import Link from "next/link";
 
 async function getEntries() {
@@ -12,10 +13,12 @@ async function getEntries() {
     select: {
       id: true,
       createdAt: true,
+      content: true,
       analysis: {
         select: {
           summary: true,
           mood: true,
+          subject: true,
         },
       },
     },
@@ -29,27 +32,66 @@ export default async function JournalPage() {
   const entries = await getEntries();
 
   return (
-    <div className='p-10 bg-zinc-400/10 h-full'>
-      <h2 className='text-3xl mb-8'>Journal</h2>
-      <div className='my-8'>
-        <Question />
-      </div>
-      <div className='grid grid-cols-3 gap-4'>
-        <NewEntryCard />
-        {entries.map((entry) => (
-          <Link href={`/journal/${entry.id}`} key={entry.id}>
-            <EntryCard
-              entry={{
-                id: entry.id,
-                createdAt: entry.createdAt,
-                analysis: {
-                  summary: entry.analysis!.summary,
-                  mood: entry.analysis!.mood,
-                },
-              }}
-            />
-          </Link>
-        ))}
+    <div className='bg-slate-200 h-[93%]'>
+      <div className='bg-indigo-600 pb-96' />
+      <main className='-mt-80'>
+        <div className='px-8 pb-8'>
+          <div className='p-6 shadow rounded-md bg-white'>
+            <div
+              className={clsx(
+                "max-h-[44rem] overflow-y-auto border-dashed border rounded p-2 h-[44rem]",
+                entries.length === 0 ? null : "bg-custom"
+              )}
+            >
+              {entries.length === 0 ? (
+                <div className='grid content-center grid-cols-1 h-full'>
+                  <div className='text-center w-fit mx-auto'>
+                    <svg
+                      className='w-32 h-32 mx-auto text-gray-400'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                      aria-hidden='true'
+                    >
+                      <path
+                        vectorEffect='non-scaling-stroke'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth='2'
+                        d='M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z'
+                      ></path>
+                    </svg>
+                    <h3 className='text-black font-semibold pt-2 text-xl'>
+                      No entries
+                    </h3>
+                    <p className='pt-1 text-sm'>
+                      Get started by creating a new project
+                    </p>
+                    <div className='pt-6'>
+                      <NewEntry />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className='flex grow flex-wrap'>
+                  {entries.map((entry) => (
+                    <div key={entry.id} className='w-1/4 p-2'>
+                      <Link href={`/journal/${entry.id}`}>
+                        <EntryCard entry={entry} />
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {entries.length === 0 ? null : (
+              <NewEntry className='relative top-3' />
+            )}
+          </div>
+        </div>
+      </main>
+      <div className='right-12 absolute bottom-8'>
+        <ChatBubble entries={entries} />
       </div>
     </div>
   );

@@ -1,3 +1,6 @@
+import { JournalEntryWithAnalysis } from "@/types";
+import type { JournalEntry } from "@prisma/client";
+
 function createURL(path: string) {
   return window.location.origin + path;
 }
@@ -10,9 +13,11 @@ export async function createNewEntry() {
   });
 
   if (res.ok) {
-    const data = await res.json();
+    const entry: JournalEntry = await res.json();
 
-    return data.data;
+    return { entry: entry };
+  } else {
+    return { error: res.statusText };
   }
 }
 
@@ -25,17 +30,23 @@ export async function updateEntry(id: string, content: string) {
   });
 
   if (res.ok) {
-    const data = await res.json();
+    const data: { data: JournalEntryWithAnalysis } = await res.json();
 
-    return data.data;
+    return { updatedEntry: data.data };
+  } else {
+    return { error: res.statusText };
   }
 }
 
-export async function askQuestion(question: string) {
+export async function askQuestion(
+  question: string,
+  entires: JournalEntryWithAnalysis[]
+) {
   const res = await fetch(createURL("/api/question"), {
     method: "POST",
     body: JSON.stringify({
       question,
+      entires,
     }),
   });
 
@@ -43,5 +54,7 @@ export async function askQuestion(question: string) {
     const data = await res.json();
 
     return data.data;
+  } else {
+    return { error: res.statusText };
   }
 }

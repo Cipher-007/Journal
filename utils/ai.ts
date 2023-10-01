@@ -1,4 +1,5 @@
-import { loadQARefineChain } from "langchain/chains";
+import { JournalEntryWithAnalysis } from "@/types";
+import { loadQAStuffChain } from "langchain/chains";
 import { Document } from "langchain/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { OpenAI } from "langchain/llms/openai";
@@ -6,7 +7,6 @@ import { StructuredOutputParser } from "langchain/output_parsers";
 import { PromptTemplate } from "langchain/prompts";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { z } from "zod";
-import { keyfetch } from "./auth";
 
 const parser = StructuredOutputParser.fromZodSchema(
   z.object({
@@ -19,7 +19,9 @@ const parser = StructuredOutputParser.fromZodSchema(
       .describe(
         "is the journal entry negative? (i.e. does it contain negative emotions?)"
       ),
-    summary: z.string().describe("quick summary of the entire journal entry."),
+    summary: z
+      .string()
+      .describe("quick summary of the entire journal entry in 10 word."),
     color: z
       .string()
       .describe(
@@ -51,12 +53,10 @@ async function getPrompt(content: string) {
 }
 
 export async function analyze(content: string) {
-  const API_KEY = await keyfetch();
   const input = await getPrompt(content);
   const model = new OpenAI({
     temperature: 0,
     modelName: "gpt-3.5-turbo",
-    openAIApiKey: API_KEY,
   });
   const result = await model.call(input);
 
@@ -69,22 +69,37 @@ export async function analyze(content: string) {
 
 export async function qa(
   question: string,
-  entires: { id: string; content: string; createdAt: Date }[]
+  entires: JournalEntryWithAnalysis[]
 ) {
+  const prompt = new PromptTemplate({
+    template: `Context information is below. Which is a journal entry from the Diary.
+    ---------------------
+    {context}
+    ---------------------
+    Given the context information and no prior knowledge, answer the question: {question}`,
+    inputVariables: ["question", "context"],
+  });
+
   const docs = entires.map((entry) => {
     return new Document({
-      pageContent: entry.content,
-      metadata: { id: entry.id, createdAt: entry.createdAt },
+      pageContent: `Entry date: ${new Date(
+        entry.createdAt!
+      ).toLocaleDateString()}
+    Mood: ${entry.analysis?.mood}
+    Subject: ${entry.analysis?.subject}
+    Summary: ${entry.analysis?.summary}
+      ${entry.content}`,
     });
   });
-  const API_KEY = await keyfetch();
+
   const model = new OpenAI({
     temperature: 0,
     modelName: "gpt-3.5-turbo",
-    openAIApiKey: API_KEY,
   });
 
-  const chain = loadQARefineChain(model);
+  const chain = loadQAStuffChain(model, {
+    prompt,
+  });
 
   const embeddings = new OpenAIEmbeddings();
 
@@ -92,10 +107,14 @@ export async function qa(
 
   const relevantDocs = await store.similaritySearch(question);
 
-  const res = await chain.call({
-    input_documents: relevantDocs,
-    question,
-  });
-
-  return res.output_text;
+  try {
+    const res = await chain.call({
+      input_documents: relevantDocs,
+      question,
+      timeout: 25000,
+    });
+    return res.text;
+  } catch (error) {
+    return String(error);
+  }
 }
