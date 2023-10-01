@@ -71,13 +71,24 @@ export async function qa(
   question: string,
   entires: JournalEntryWithAnalysis[]
 ) {
+  const prompt = new PromptTemplate({
+    template: `Context information is below. Which is a journal entry from the Diary.
+    ---------------------
+    {context}
+    ---------------------
+    Given the context information and no prior knowledge, answer the question: {question}`,
+    inputVariables: ["question", "context"],
+  });
+
   const docs = entires.map((entry) => {
     return new Document({
-      pageContent: entry.content,
-      metadata: {
-        createdAt: new Date(entry.createdAt!).toDateString(),
-        ...entry.analysis,
-      },
+      pageContent: `Entry date: ${new Date(
+        entry.createdAt!
+      ).toLocaleDateString()}
+    Mood: ${entry.analysis?.mood}
+    Subject: ${entry.analysis?.subject}
+    Summary: ${entry.analysis?.summary}
+      ${entry.content}`,
     });
   });
 
@@ -86,7 +97,9 @@ export async function qa(
     modelName: "gpt-3.5-turbo",
   });
 
-  const chain = loadQAStuffChain(model);
+  const chain = loadQAStuffChain(model, {
+    prompt,
+  });
 
   const embeddings = new OpenAIEmbeddings();
 
