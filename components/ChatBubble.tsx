@@ -32,7 +32,16 @@ function Chat({ chat }: { chat: ChatProps }) {
             </div>
           ) : (
             <div className='max-w-xs mb-2 p-3 rounded-lg shadow-md bg-blue-500 text-white text-sm w-fit justify-self-start'>
-              {item.ai}
+              {item.ai.split("\n").map((line, index) => (
+                <p
+                  key={index}
+                  className={`${/^\d/.test(line.charAt(0)) ? "pl-0" : "pl-2"} ${
+                    index === 0 ? "pt-0" : "pt-1"
+                  }`}
+                >
+                  {line}
+                </p>
+              ))}
             </div>
           )}
         </div>
